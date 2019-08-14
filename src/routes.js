@@ -1,27 +1,40 @@
-const express = require('express')
-const routes = express.Router()
+module.exports = function (io, connectedUsers) {
+  const express = require('express')
+  const routes = express.Router()
 
-/**
- * Controllers
- */
-const DevController = require('./app/controllers/DevController')
-const LikeController = require('./app/controllers/LikeController')
-const DislikeController = require('./app/controllers/DislikeControler')
-/**
- * Dev Controller
- */
+  // /**
+  //  * Controllers
+  //  */
+  const DevController = require('./app/controllers/DevController')
+  const LikeController = require('./app/controllers/LikeController')
+  const DislikeController = require('./app/controllers/DislikeControler')
 
-routes.get('/api/v1/dev/list', DevController.index)
-routes.post('/api/v1/dev/me', DevController.store)
+  /**
+   * Socket.io
+   */
+  routes.use((req, res, next) => {
+    req.io = io
 
-/**
- * Like Controller
- */
-routes.post('/api/v1/dev/:devId/like', LikeController.store)
+    req.connectedUsers = connectedUsers
+    next()
+  })
 
-/**
- * Dislike Controller
- */
-routes.post('/api/v1/dev/:devId/dislike', DislikeController.store)
+  // /**
+  //  * Dev Controller
+  //  */
 
-module.exports = routes
+  routes.get('/api/v1/dev/list', DevController.index)
+  routes.post('/api/v1/dev/me', DevController.store)
+
+  // /**
+  //  * Like Controller
+  //  */
+  routes.post('/api/v1/dev/:devId/like', LikeController.store)
+
+  // /**
+  //  * Dislike Controller
+  //  */
+  routes.post('/api/v1/dev/:devId/dislike', DislikeController.store)
+
+  return routes
+}

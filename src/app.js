@@ -2,23 +2,22 @@ const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
 const mongoose = require('mongoose')
-
 const dbCfg = require('./config/database')
-
-const routes = require('./routes')
+const connectedUsers = {}
 
 class App {
   constructor () {
-    this.server = express()
+    this.express = express()
+    this.server = require('http').Server(this.express)
     this.database()
     this.middlewares()
     this.routes()
   }
 
   middlewares () {
-    this.server.use(express.json())
-    this.server.use(cors())
-    this.server.use(morgan('dev'))
+    this.express.use(express.json())
+    this.express.use(cors())
+    this.express.use(morgan('dev'))
   }
 
   database () {
@@ -31,7 +30,14 @@ class App {
   }
 
   routes () {
-    this.server.use(routes)
+    const io = require('socket.io')(this.server)
+
+    io.on('connection', socket => {
+      const { user } = socket.handshake.query
+
+      connectedUsers[user] = socket.id
+    })
+    this.express.use(require('./routes')(io, connectedUsers))
   }
 }
 
